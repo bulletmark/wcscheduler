@@ -1,0 +1,83 @@
+#!/usr/bin/env -S env/bin/python -u
+'Program to schedule control of Watts Clever switches'
+# Requires python 3.5+
+# Mark Blakeney, May 2016.
+
+# Standard packages
+import sys, argparse, platform, time, datetime
+
+# Local packages
+import config, wccontrol, timesched
+
+no_states = ('off', 'no')
+
+myhost = platform.node().lower()
+
+# Process command line options
+opt = argparse.ArgumentParser(description=__doc__.strip())
+opt.add_argument('-c', '--config',
+        help='alternative configuration file')
+args = opt.parse_args()
+
+conf = config.get(opt.prog + '.conf', args.config)
+if not conf:
+    sys.exit(1)
+
+sched = timesched.Scheduler()
+
+now = datetime.datetime.now().time()
+
+class Job:
+    'Class to manage each timer job'
+    def __init__(self, conf):
+        host = conf.get('host')
+        # Ignore this job if configured for specific other host
+        if host and host.lower() != myhost:
+            return
+
+        ad = conf['address']
+        self.addresses = [int(a) for a in ad.split(',')] \
+                if ',' in str(ad) else [int(ad)]
+
+        self.group = conf.get('group', 0)
+        self.name = conf.get('name', f'Address {ad}')
+        self.gpiopin = conf.get('gpiopin')
+        self.days = conf.get('days', timesched.DAYS_STRING)
+
+        # Allow text or int for initial state
+        state = conf.get('start')
+        if type(state) is str:
+            state = state.lower() not in no_states
+
+        state = not bool(state)
+
+        # Iterate over each configured off/on times ..
+        istate = inited = False
+        for p, t in enumerate(conf['times'].split(',')):
+            jobtime = datetime.time.fromisoformat(t.strip())
+            text = 'on' if state else 'off'
+            sched.repeat_on_days(self.days, jobtime, p, self.do, state)
+            print(f'Will set {self.name} {text} at {self.days} {jobtime}')
+            state = not state
+
+            if not inited and jobtime >= now:
+                istate = state
+                inited = True
+
+        # Ensure assumed starting state is set at startup
+        self.do(istate)
+
+    def do(self, state):
+        'Called each each timer expiry to do output'
+        text = 'on' if state else 'off'
+        print(f'Set {self.name} {text}')
+        for addr in self.addresses:
+            wccontrol.set(self.group, addr, state, self.gpiopin)
+            time.sleep(0.2)
+
+# Set up each job, each with potentially multiple timers
+for t in conf['outputs']:
+    Job(t)
+
+sched.run()
+print('No timers configured')

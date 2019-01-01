@@ -1,0 +1,14 @@
+[Unit]
+Description=#PROGTITLE# Service
+# NOTE: On a RPi, you MUST also sudo systemctl enable
+# systemd-time-wait-sync
+After=time-sync.target
+
+[Service]
+User=#USER#
+# Set the following to the source program directory (where you git cloned)
+WorkingDirectory=#PROGDIR#
+ExecStart=#PROGDIR#/%p
+
+[Install]
+WantedBy=default.target
