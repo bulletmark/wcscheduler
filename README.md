@@ -21,7 +21,7 @@ env/bin/pip install wcscheduler
 The above will install
 [`wccontrol`](https://pypi.org/project/wccontrol/) in your local env/
 dir but you then need to follow the instructions to [configure
-wccontrol](https://pypi.org/project/wccontrol/) in your local `env/`.
+wccontrol](https://pypi.org/project/wccontrol/) from your local `env/`.
 Be sure to set up the `gpio` group and `udev` rules etc described there
 and also program the switch groups and addresses. Run
 `env/bin/wccontrol` to program the switches.
