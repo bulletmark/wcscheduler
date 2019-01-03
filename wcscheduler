@@ -49,10 +49,11 @@ class Job:
         if type(state) is str:
             state = state.lower() not in no_states
 
-        state = not bool(state)
+        istate = bool(state)
+        state = not istate
 
         # Iterate over each configured off/on times ..
-        istate = inited = False
+        inited = False
         for p, t in enumerate(conf['times'].split(',')):
             jobtime = datetime.time.fromisoformat(t.strip())
             text = 'on' if state else 'off'
