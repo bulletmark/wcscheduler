@@ -1,4 +1,4 @@
-#!/usr/bin/env -S env/bin/python -u
+#!env/bin/python -u
 'Program to schedule control of Watts Clever switches'
 # Requires python 3.5+
 # Mark Blakeney, May 2016.
@@ -35,12 +35,12 @@ class Job:
         if host and host.lower() != myhost:
             return
 
-        ad = conf['address']
+        ad = conf.get('address', 6)
         self.addresses = [int(a) for a in ad.split(',')] \
                 if ',' in str(ad) else [int(ad)]
 
         self.group = conf.get('group', 0)
-        self.name = conf.get('name', f'Address {ad}')
+        self.name = conf.get('name', 'Address {}'.format(ad))
         self.gpiopin = conf.get('gpiopin')
         self.days = conf.get('days', timesched.DAYS_STRING)
 
@@ -57,7 +57,8 @@ class Job:
             jobtime = datetime.time.fromisoformat(t.strip())
             text = 'on' if state else 'off'
             sched.repeat_on_days(self.days, jobtime, p, self.do, state)
-            print(f'Will set {self.name} {text} at {self.days} {jobtime}')
+            print('Will set {} {} at {} {}'.format(
+                self.name, text, self.days, jobtime))
             state = not state
 
             if not inited and jobtime >= now:
@@ -70,7 +71,7 @@ class Job:
     def do(self, state):
         'Called each each timer expiry to do output'
         text = 'on' if state else 'off'
-        print(f'Set {self.name} {text}')
+        print('Set {} {}'.format(self.name, text))
         for addr in self.addresses:
             wccontrol.set(self.group, addr, state, self.gpiopin)
             time.sleep(0.2)
