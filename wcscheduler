@@ -4,13 +4,13 @@
 # Mark Blakeney, May 2016.
 
 # Standard packages
-import sys, argparse, platform, time, datetime
+import os, argparse, platform, time, datetime
+from pathlib import Path
 
-# Local packages
-import config, wccontrol, timesched
+# 3rd party packages
+import wccontrol, timesched, ruamel.yaml as yaml
 
-no_states = ('off', 'no')
-
+NO_STATES = ('off', 'no')
 myhost = platform.node().lower()
 
 # Process command line options
@@ -19,12 +19,16 @@ opt.add_argument('-c', '--config',
         help='alternative configuration file')
 args = opt.parse_args()
 
-conf = config.get(opt.prog + '.conf', args.config)
-if not conf:
-    sys.exit(1)
+# Determine config file path
+cfile = Path(args.config) if args.config else \
+        Path(os.getenv('XDG_CONFIG_HOME', '~/.config')).expanduser() / \
+        (opt.prog + '.conf')
+
+# Open and read config file
+with cfile.open() as fp:
+    conf = yaml.safe_load(fp)
 
 sched = timesched.Scheduler()
-
 now = datetime.datetime.now().time()
 
 class Job:
@@ -47,7 +51,7 @@ class Job:
         # Allow text or int for initial state
         state = conf.get('start')
         if type(state) is str:
-            state = state.lower() not in no_states
+            state = state.lower() not in NO_STATES
 
         istate = bool(state)
         state = not istate
