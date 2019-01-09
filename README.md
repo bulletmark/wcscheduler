@@ -51,4 +51,17 @@ To see status and logs:
     systemctl status wcscheduler
     journalctl -u wcscheduler
 
+### Command Line Usage
+
+```
+usage: wcscheduler [-h] [-c CONFIG]
+
+Program to schedule control of Watts Clever switches
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        alternative configuration file
+```
+
 <!-- vim: se ai syn=markdown: -->

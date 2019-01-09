@@ -39,13 +39,17 @@ class Job:
         if host and host.lower() != myhost:
             return
 
+        # Allow single or multiple addresses
         address = conf.get('address', 6)
         self.addresses = [int(a) for a in address.split(',')] \
                 if ',' in str(address) else [int(address)]
 
+        # Allow single or multiple groups
         group = conf.get('group', 0)
         self.groups = [int(g) for g in group.split(',')] \
                 if ',' in str(group) else [int(group)]
+
+        self.lastpair = (self.groups[-1], self.addresses[-1])
         self.name = conf.get('name', 'Address {}'.format(address))
         self.gpiopin = conf.get('gpiopin')
         self.days = conf.get('days', timesched.DAYS_STRING)
@@ -82,7 +86,8 @@ class Job:
         for group in self.groups:
             for addr in self.addresses:
                 wccontrol.set(group, addr, state, self.gpiopin)
-                time.sleep(0.2)
+                if (group, addr) != self.lastpair:
+                    time.sleep(0.2)
 
 # Set up each job, each with potentially multiple timers
 for t in conf['outputs']:
