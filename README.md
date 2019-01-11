@@ -29,15 +29,16 @@ from within your `wcscheduler` dir to program the switches.
 
 ### Configuration
 
-Copy the sample `wcscheduler.conf` configuration file to
-`~/.config/wcscheduler.conf` and then edit the sample settings to your
-requirements. You can add multiple timers for multiple devices as
-described by the comments in that file.
+Copy the sample [`wcscheduler.conf`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf)
+configuration file to `~/.config/wcscheduler.conf` and then edit the
+sample settings to your requirements. You can add multiple timers for
+multiple devices as described by the comments in that file.
 
 ### Systemd Configuration for Auto Start etc
 
-Copy the included `wcscheduler.service` to `/etc/systemd/systemd/` and
-edit the template values within. Then:
+Copy the included
+[`wcscheduler.service`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.service)
+to `/etc/systemd/systemd/` and edit the `#TEMPLATE#` values within. Then:
 
     sudo systemctl enable wcscheduler
     sudo systemctl start wcscheduler
