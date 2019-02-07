@@ -1,4 +1,4 @@
-#!env/bin/python -u
+#!/usr/bin/env -S env/bin/python -u
 'Program to schedule control of Watts Clever switches'
 # Requires python 3.5+
 # Mark Blakeney, May 2016.
@@ -68,7 +68,7 @@ class Job:
             jobtime = datetime.time.fromisoformat(t.strip())
             text = 'on' if state else 'off'
             sched.repeat_on_days(self.days, jobtime, p, self.do, state)
-            print('Will set {} {} at {} {}'.format(
+            print('{} set {} at {} {}'.format(
                 self.name, text, self.days, jobtime))
             state = not state
 
