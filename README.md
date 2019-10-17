@@ -10,6 +10,8 @@ https://github.com/bulletmark/wcscheduler.
 
 ### Installation
 
+Requires Python 3.4 or later. Does not work with Python 2.
+
 ```bash
 git clone https://github.com/bulletmark/wcscheduler.git
 cd wcscheduler

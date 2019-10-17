@@ -31,6 +31,19 @@ with cfile.open() as fp:
 sched = timesched.Scheduler()
 now = datetime.datetime.now().time()
 
+def parsetime(timestr):
+    'Parse time value from given string'
+    length = len(timestr)
+
+    if length == 5:
+        tm = datetime.datetime.strptime(timestr, '%H:%M').time()
+    elif length == 8:
+        tm = datetime.datetime.strptime(timestr, '%H:%M:%S').time()
+    else:
+        sys.exit('Invalid configured time string "{}"'.format(timestr))
+
+    return tm
+
 class Job:
     'Class to manage each timer job'
     def __init__(self, conf):
@@ -65,7 +78,7 @@ class Job:
         # Iterate over each configured off/on times ..
         inited = False
         for p, t in enumerate(conf['times'].split(',')):
-            jobtime = datetime.time.fromisoformat(t.strip())
+            jobtime = parsetime(t.strip())
             text = 'on' if state else 'off'
             sched.repeat_on_days(self.days, jobtime, p, self.do, state)
             print('{} set {} at {} {}'.format(
