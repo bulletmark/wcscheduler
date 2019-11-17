@@ -17,7 +17,6 @@ git clone https://github.com/bulletmark/wcscheduler.git
 cd wcscheduler
 python3 -m venv env
 env/bin/pip install -r requirements.txt
-env/bin/pip install wcscheduler
 ```
 
 The above will install
@@ -31,16 +30,27 @@ from within your `wcscheduler` dir to program the switches.
 
 ### Configuration
 
-Copy the sample [`wcscheduler.conf`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf)
+Copy the sample
+[`wcscheduler.conf`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf)
 configuration file to `~/.config/wcscheduler.conf` and then edit the
-sample settings to your requirements. You can add multiple timers for
-multiple devices as described by the comments in that file.
+sample settings in that target file to your requirements. You can add
+multiple timers for multiple devices as described by the comments in
+that file.
+
+    cp wcscheduler.conf ~/.config/
+    vim ~/.config/wcscheduler.conf
 
 ### Systemd Configuration for Auto Start etc
 
 Copy the included
 [`wcscheduler.service`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.service)
-to `/etc/systemd/systemd/` and edit the `#TEMPLATE#` values within. Then:
+to `/etc/systemd/systemd/` and edit the `#TEMPLATE#` values within that
+target file:
+
+    sudo cp wcscheduler.service /etc/systemd/systemd/
+    sudo vim /etc/systemd/systemd/wcscheduler.service
+
+Then:
 
     sudo systemctl enable wcscheduler
     sudo systemctl start wcscheduler
