@@ -18,6 +18,7 @@ all:
 
 check:
 	flake8 $(NAME)
+	vermin -i -q $(NAME)
 
 clean:
 	rm -rf *.pyc  __pycache__

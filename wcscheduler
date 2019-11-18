@@ -4,7 +4,7 @@
 # Mark Blakeney, May 2016.
 
 # Standard packages
-import os, argparse, platform, time, datetime
+import os, sys, argparse, platform, time, datetime
 from pathlib import Path
 
 # 3rd party packages
