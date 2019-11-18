@@ -2,7 +2,7 @@
 
 This is a Raspberry Pi program to switch one or more Watts Clever RF
 Switches on or off at specified times and days of week. It uses my
-[Python module `wcccontrol`](https://github.com/bulletmark/wccontrol)
+Python module [`wcccontrol`](https://github.com/bulletmark/wccontrol)
 which controls Watts Clever switches via an RF transmitter.
 
 The latest version of this document and code is available at
