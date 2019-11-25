@@ -1,3 +1,5 @@
 ruamel.yaml
-timesched>=1.2
+timesched
 wccontrol
+bottle
+meinheld

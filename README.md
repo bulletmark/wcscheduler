@@ -1,9 +1,13 @@
 ## WCSCHEDULER - Schedule Watts Clever Switches
 
 This is a Raspberry Pi program to switch one or more Watts Clever RF
-Switches on or off at specified times and days of week. It uses my
-Python module [`wcccontrol`](https://github.com/bulletmark/wccontrol)
-which controls Watts Clever switches via an RF transmitter.
+switches to turn mains powered devices on or off at specified times and
+days of week. It uses my Python module
+[`wcccontrol`](https://github.com/bulletmark/wccontrol) which controls
+Watts Clever switches via an RF transmitter. It can also run a small
+internal webserver to receive webhooks commands from the internet, e.g.
+from [IFTTT](https://ifttt.com/) using Google Assistant, to remotely
+switch the devices.
 
 The latest version of this document and code is available at
 https://github.com/bulletmark/wcscheduler.
@@ -15,17 +19,17 @@ Requires Python 3.4 or later. Does not work with Python 2.
 ```bash
 git clone https://github.com/bulletmark/wcscheduler.git
 cd wcscheduler
-python3 -m venv env
-env/bin/pip install -r requirements.txt
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
 ```
 
 The above will install
-[`wccontrol`](https://github.com/bulletmark/wccontrol/) in your local env/
+[`wccontrol`](https://github.com/bulletmark/wccontrol/) in your local `venv/`
 dir but you then need to follow the instructions to [make the GPIO
 accessible](https://github.com/bulletmark/wccontrol#make-gpio-device-accessible) and then to [program the switches](https://github.com/bulletmark/wccontrol#groups-and-addresses).
 
 Be sure to set up the `gpio` group and `udev` rules etc as described and
-also program the switch groups and addresses. Run `env/bin/wccontrol`
+also program the switch groups and addresses. Run `venv/bin/wccontrol`
 from within your `wcscheduler` dir to program the switches.
 
 ### Configuration
@@ -64,12 +68,40 @@ To see status and logs:
     systemctl status wcscheduler
     journalctl -u wcscheduler
 
+### IFTTT Webhook Configuration
+
+You can set up an [IFTTT](https://ifttt.com/) webhook applet e.g. which
+can be trigged by Google Assistant to switch your devices remotely by
+voice command from your phone or from a Google home device. Configure a
+[IFTTT](https://ifttt.com/) webhook POST JSON command with _webhook_ and
+_action_ keys in the body as a minimum. You can also include the
+_created_ key which can be used to time contrain the message (see the
+comments about `webdelay` in
+[`wcscheduler.conf`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf)).
+The _webhook_ key must match the `webhook` name in the corresponding
+`outputs` section of your `~/.config/wcscheduler.conf`. E.g.:
+
+```
+{
+  "webhook": "<some_unique_text>"
+  "action": "{{TextField}}",
+  "created": "{{CreatedAt}}",
+}
+```
+
+Be sure to specify `webport` in `~/.config/wcscheduler.conf` for the
+port for the web server to listen on and receive JSON POST messages. If
+`webport` is not set, or there are no `webhook` values set for any
+`outputs`, then the internal web server will not be started. A typical
+home user will need to forward the port from their internet router to
+the Raspberry Pi running this application.
+
 ### Command Line Usage
 
 ```
 usage: wcscheduler [-h] [-c CONFIG]
 
-Program to schedule control of Watts Clever switches
+Program to schedule control of Watts Clever switches.
 
 optional arguments:
   -h, --help            show this help message and exit

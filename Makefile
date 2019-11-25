@@ -17,8 +17,9 @@ NAME= wcscheduler
 all:
 
 check:
-	flake8 $(NAME)
-	vermin -i -q $(NAME)
+	flake8 $(NAME) *.py
+	vermin -i -q $(NAME) *.py
+	shellcheck *.sh
 
 clean:
 	rm -rf *.pyc  __pycache__

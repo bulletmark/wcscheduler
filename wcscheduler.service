@@ -7,8 +7,8 @@ After=time-sync.target
 [Service]
 User=#USER#
 # Set the following to the source program directory (where you git cloned)
-WorkingDirectory=#PROGDIR#
-ExecStart=#PROGDIR#/%p
+WorkingDirectory=#WORKDIR#
+ExecStart=#WORKDIR#/%p
 
 [Install]
 WantedBy=default.target

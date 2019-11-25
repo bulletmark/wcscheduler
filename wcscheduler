@@ -1,17 +1,17 @@
-#!/usr/bin/env -S env/bin/python -u
-'Program to schedule control of Watts Clever switches'
-# Requires python 3.5+
+#!venv/bin/python -u
+'Program to schedule control of Watts Clever switches.'
+# Requires python 3.4+
 # Mark Blakeney, May 2016.
 
 # Standard packages
-import os, sys, argparse, platform, time, datetime
+import os, sys, argparse, threading
 from pathlib import Path
 
 # 3rd party packages
-import wccontrol, timesched, ruamel.yaml as yaml
+import ruamel.yaml as yaml
 
-NO_STATES = ('off', 'no')
-myhost = platform.node().lower()
+# Local packages
+import scheduler, web
 
 # Process command line options
 opt = argparse.ArgumentParser(description=__doc__.strip())
@@ -28,83 +28,20 @@ cfile = Path(args.config) if args.config else \
 with cfile.open() as fp:
     conf = yaml.safe_load(fp)
 
-sched = timesched.Scheduler()
-now = datetime.datetime.now().time()
+num_timers, num_hooks = scheduler.init(args, conf)
+print('Starting with {} timers, {} webhooks'.format(num_timers, num_hooks))
 
-def parsetime(timestr):
-    'Parse time value from given string'
-    length = len(timestr)
+# We always run the web server in main thread because better for
+# interrupt (e.g. ctrl+c) handling
+if num_hooks > 0 and web.init(args, conf):
+    if num_timers > 0:
+        t = threading.Thread(target=scheduler.run)
+        t.daemon = True
+        t.start()
 
-    if length == 5:
-        tm = datetime.datetime.strptime(timestr, '%H:%M').time()
-    elif length == 8:
-        tm = datetime.datetime.strptime(timestr, '%H:%M:%S').time()
-    else:
-        sys.exit('Invalid configured time string "{}"'.format(timestr))
+    web.run()
+else:
+    if num_timers == 0:
+        sys.exit('Terminating because nothing to do ..')
 
-    return tm
-
-class Job:
-    'Class to manage each timer job'
-    def __init__(self, conf):
-        host = conf.get('host')
-        # Ignore this job if configured for specific other host
-        if host and host.lower() != myhost:
-            return
-
-        # Allow single or multiple addresses
-        address = conf.get('address', 6)
-        self.addresses = [int(a) for a in address.split(',')] \
-                if ',' in str(address) else [int(address)]
-
-        # Allow single or multiple groups
-        group = conf.get('group', 0)
-        self.groups = [int(g) for g in group.split(',')] \
-                if ',' in str(group) else [int(group)]
-
-        self.lastpair = (self.groups[-1], self.addresses[-1])
-        self.name = conf.get('name', 'Address {}'.format(address))
-        self.gpiopin = conf.get('gpiopin')
-        self.days = conf.get('days', timesched.DAYS_STRING)
-
-        # Allow text or int for initial state
-        state = conf.get('start')
-        if type(state) is str:
-            state = state.lower() not in NO_STATES
-
-        istate = bool(state)
-        state = not istate
-
-        # Iterate over each configured off/on times ..
-        inited = False
-        for p, t in enumerate(conf['times'].split(',')):
-            jobtime = parsetime(t.strip())
-            text = 'on' if state else 'off'
-            sched.repeat_on_days(self.days, jobtime, p, self.do, state)
-            print('{} set {} at {} {}'.format(
-                self.name, text, self.days, jobtime))
-            state = not state
-
-            if not inited and jobtime >= now:
-                istate = state
-                inited = True
-
-        # Ensure assumed starting state is set at startup
-        self.do(istate)
-
-    def do(self, state):
-        'Called each each timer expiry to do output'
-        text = 'on' if state else 'off'
-        print('Set {} {}'.format(self.name, text))
-        for group in self.groups:
-            for addr in self.addresses:
-                wccontrol.set(group, addr, state, self.gpiopin)
-                if (group, addr) != self.lastpair:
-                    time.sleep(0.2)
-
-# Set up each job, each with potentially multiple timers
-for t in conf['outputs']:
-    Job(t)
-
-sched.run()
-print('No timers configured')
+    scheduler.run()
