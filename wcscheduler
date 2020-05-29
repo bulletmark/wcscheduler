@@ -4,14 +4,18 @@
 # Mark Blakeney, May 2016.
 
 # Standard packages
-import os, sys, argparse, threading
+import os
+import sys
+import argparse
+import threading
 from pathlib import Path
 
 # 3rd party packages
 import ruamel.yaml as yaml
 
 # Local packages
-import scheduler, web
+import scheduler
+import web
 
 # Process command line options
 opt = argparse.ArgumentParser(description=__doc__.strip())

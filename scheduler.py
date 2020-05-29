@@ -1,16 +1,20 @@
 #!/usr/bin/python3
-'Program to schedule control of Watts Clever switches'
+'Program to schedule or remote control Watts Clever switches'
 # Requires python 3.5+
 # Mark Blakeney, May 2016.
 
 # Standard packages
-import sys, platform, time, threading
+import sys
+import platform
+import time
+import threading
 from datetime import datetime, timedelta
 
 # 3rd party packages
-import wccontrol, timesched
+import wccontrol
+import timesched
 
-ON_STATES = ('1', 'on', 'true', 'yes', 'set')
+ON_STATES = set(('1', 'on', 'true', 'yes', 'set'))
 myhost = platform.node().lower()
 sched = timesched.Scheduler()
 lock = threading.Lock()
@@ -34,7 +38,7 @@ def text(state):
     return 'on' if state else 'off'
 
 class Job:
-    'Class to manage each timer job'
+    'Class to manage each timer/webhook job'
     webhooks = {}
     timers = []
 
@@ -59,7 +63,7 @@ class Job:
         self.name = conf.get('name', 'Address {}'.format(address))
         self.gpiopin = conf.get('gpiopin')
 
-        # Set up webhook
+        # Set up webhook, if configured
         webhook = conf.get('webhook')
         if webhook:
             if webhook in self.webhooks:
@@ -81,7 +85,7 @@ class Job:
         inited = False
         state = not istate
 
-        # Iterate over each configured off/on times ..
+        # Iterate over each configured off/on times, if configured ..
         days = conf.get('days', timesched.DAYS_STRING)
         for p, t in enumerate(times.split(',')):
             jobtime = parsetime(t.strip())
@@ -140,8 +144,8 @@ def init(args, conf):
 
     # Iterate over configured outputs
     now = datetime.now().time()
-    for t in outputs:
-        Job(t, now)
+    for job in outputs:
+        Job(job, now)
 
     return len(Job.timers), len(Job.webhooks)
 

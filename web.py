@@ -3,7 +3,7 @@
 # Mark Blakeney, Nov 2019.
 import scheduler
 
-_port = 0
+_port = None
 
 def init(args, conf):
     'Set up web app'
