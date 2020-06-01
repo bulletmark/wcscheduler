@@ -123,7 +123,7 @@ def webhook(hook, action, created=None):
                 ctime.isoformat(' ', 'minutes')))
             return
 
-    job = Job.webhooks[hook]
+    job = Job.webhooks.get(hook)
     if job:
         job.do(action.lower() in ON_STATES)
     else:
