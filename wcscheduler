@@ -11,7 +11,7 @@ import threading
 from pathlib import Path
 
 # 3rd party packages
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
 
 # Local packages
 import scheduler
@@ -28,9 +28,8 @@ cfile = Path(args.config) if args.config else \
         Path(os.getenv('XDG_CONFIG_HOME', '~/.config')).expanduser() / \
         (opt.prog + '.conf')
 
-# Open and read config file
-with cfile.open() as fp:
-    conf = yaml.safe_load(fp)
+# Read config file
+conf = YAML(typ='safe').load(cfile)
 
 num_timers, num_hooks = scheduler.init(args, conf)
 print('Starting with {} timers, {} webhooks'.format(num_timers, num_hooks))
