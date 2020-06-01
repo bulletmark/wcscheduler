@@ -18,7 +18,6 @@ def init(args, conf):
 
 def run():
     'Run web app'
-    import meinheld
     from bottle import Bottle, request
 
     app = Bottle()
@@ -30,9 +29,5 @@ def run():
                 request.json.get('created'))
         return 'ok'
 
-    # Disable access logging to improve performance. We are doing our
-    # own logging.
-    meinheld.set_access_logger(None)
-
     # Will block here, essentially forever
-    app.run(host='0.0.0.0', port=int(_port), server='meinheld')
+    app.run(host='0.0.0.0', port=int(_port), server='bjoern')
