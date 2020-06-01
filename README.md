@@ -4,7 +4,7 @@ This is a Raspberry Pi program to switch one or more Watts Clever RF
 switches to turn mains powered devices on or off at specified times and
 days of week. It uses my Python module
 [`wcccontrol`](https://github.com/bulletmark/wccontrol) which controls
-Watts Clever switches via an RF transmitter. It can also run a small
+Watts Clever switches via an RF transmitter. It also runs a small
 internal webserver to receive webhooks commands from the internet, e.g.
 from [IFTTT](https://ifttt.com/) using Google Assistant, to remotely
 switch the devices.
