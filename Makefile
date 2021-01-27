@@ -12,7 +12,7 @@
 # General Public License at <http://www.gnu.org/licenses/> for more
 # details.
 
-NAME= wcscheduler
+NAME = $(shell basename $(CURDIR))
 
 all:
 
