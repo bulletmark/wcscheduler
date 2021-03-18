@@ -1,6 +1,5 @@
 #!venv/bin/python -u
 'Program to schedule control of Watts Clever switches.'
-# Requires python 3.4+
 # Mark Blakeney, May 2016.
 
 # Standard packages
@@ -31,20 +30,21 @@ cfile = Path(args.config) if args.config else \
 # Read config file
 conf = YAML(typ='safe').load(cfile)
 
-num_timers, num_hooks = scheduler.init(args, conf)
-print('Starting with {} timers, {} webhooks'.format(num_timers, num_hooks))
+num_jobs, num_hooks, num_timers = scheduler.init(args, conf)
+print(f'Starting with {num_jobs} jobs, {num_hooks} hooks, '
+        f'{num_timers} timers')
 
 # We always run the web server in main thread because better for
 # interrupt (e.g. ctrl+c) handling
 if num_hooks > 0 and web.init(args, conf):
-    if num_timers > 0:
+    if num_jobs > 0:
         t = threading.Thread(target=scheduler.run)
         t.daemon = True
         t.start()
 
     web.run()
 else:
-    if num_timers == 0:
+    if num_jobs == 0:
         sys.exit('Terminating because nothing to do ..')
 
     scheduler.run()

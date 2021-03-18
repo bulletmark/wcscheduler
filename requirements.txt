@@ -3,3 +3,4 @@ timesched
 wccontrol
 bottle
 bjoern
+requests

@@ -14,7 +14,7 @@ https://github.com/bulletmark/wcscheduler.
 
 ### Installation
 
-Requires Python 3.4 or later. Does not work with Python 2.
+Requires Python 3.6 or later. Does not work with Python 2.
 
 ```bash
 git clone https://github.com/bulletmark/wcscheduler.git
@@ -38,13 +38,24 @@ Copy the sample
 [`wcscheduler.conf`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf)
 configuration file to `~/.config/wcscheduler.conf` and then edit the
 sample settings in that target file to your requirements. You can add
-multiple timers for multiple devices as described by the comments in
+multiple on/off times for multiple devices as described by the comments in
 that file.
 
     cp wcscheduler.conf ~/.config/
     vim ~/.config/wcscheduler.conf
 
-### Systemd Configuration for Auto Start etc
+#### Setting times based on Sunrise and/or Sunset
+
+You can set absolute on and off times, or you can set times based on
+[sunrise and sunset](https://sunrise-sunset.org/) events, with a +/-
+delay, for a location. A location is specified as a latitude and
+longitude pair of coordinates. See the instructions in the [sample
+configuration
+file](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.conf).
+Sunrise and Sunset times are fetched from the free [Sunrise Sunset
+API](https://sunrise-sunset.org/api).
+
+### systemd Configuration for Auto Start etc
 
 Copy the included
 [`wcscheduler.service`](https://github.com/bulletmark/wcscheduler/blob/master/wcscheduler.service)
