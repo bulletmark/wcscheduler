@@ -34,7 +34,7 @@ def parsetime(timestr):
 
     return tm
 
-SUNAPI = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&formatted=0'
+SUNAPI = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0'
 
 # Daily time at which we fetch SUN times
 SUNTIME = parsetime('00:01')
@@ -42,8 +42,9 @@ SUNTIME = parsetime('00:01')
 # Times we assume if web API request fails
 SUNTIMES = {'sunrise': '06:00', 'sunset': '18:00'}
 
-def fetchsun(url):
+def fetchsun(coords, today):
     'Fetch sunrise/sunset data from web API'
+    url = SUNAPI.format(coords[0], coords[1], today.isoformat())
     r = requests.get(url)
     if r.status_code != requests.codes.ok:
         print(f'Error {r.status_code} fetching {url}',
@@ -51,7 +52,7 @@ def fetchsun(url):
         return None
     res = r.json()
     if not res or res.get('status') != 'OK':
-        print(f'Status error fetching {url}', file=sys.stderr)
+        print(f'Status {res} error fetching {url}', file=sys.stderr)
         return None
     res = res.get('results')
     if not res:
@@ -60,21 +61,20 @@ def fetchsun(url):
 
     return res
 
-def getsun(url, event, today):
+def getsun(coords, event, today):
     'Cache all sunrise/sunset fetches for today'
-    fullurl = f'{url}&date={today.isoformat()}'
 
     cached = False
     if getsun.day != today:
         getsun.cache.clear()
         getsun.day = today
-    elif fullurl in getsun.cache:
-        res = getsun.cache.get(fullurl)
+    elif coords in getsun.cache:
+        res = getsun.cache.get(coords)
         cached = True
 
     if not cached:
-        res = fetchsun(fullurl)
-        getsun.cache[fullurl] = res
+        res = fetchsun(coords, today)
+        getsun.cache[coords] = res
 
     if not res:
         return None
@@ -122,13 +122,12 @@ class JobState:
             if not loc:
                 sys.exit(f'Error: Location "{text}" not defined.')
 
-            lat, lng = (float(v.strip()) for v in loc.split(','))
-            self.url = SUNAPI.format(lat, lng)
+            self.coords = tuple(float(v.strip()) for v in loc.split(','))
 
     def fetchtime(self):
         'Fetch event time'
         today = date.today()
-        tevent = getsun(self.url, self.event, today)
+        tevent = getsun(self.coords, self.event, today)
         if not tevent:
             tevent = datetime.combine(today,
                     parsetime(SUNTIMES.get(self.event)))
