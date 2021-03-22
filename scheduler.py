@@ -63,7 +63,6 @@ def fetchsun(coords, today):
 
 def getsun(coords, event, today):
     'Cache all sunrise/sunset fetches for today'
-
     cached = False
     if getsun.day != today:
         getsun.cache.clear()
