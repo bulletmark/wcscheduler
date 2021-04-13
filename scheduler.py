@@ -45,15 +45,18 @@ SUNTIMES = {'sunrise': '06:00', 'sunset': '18:00'}
 def fetchsun(coords, today):
     'Fetch sunrise/sunset data from web API'
     url = SUNAPI.format(coords[0], coords[1], today.isoformat())
-    r = requests.get(url)
-    if r.status_code != requests.codes.ok:
-        print(f'Error {r.status_code} fetching {url}',
-                file=sys.stderr)
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f'Error: {str(e)}', file=sys.stderr)
         return None
+
     res = r.json()
     if not res or res.get('status') != 'OK':
         print(f'Status {res} error fetching {url}', file=sys.stderr)
         return None
+
     res = res.get('results')
     if not res:
         print(f'Results error fetching {url}', file=sys.stderr)
