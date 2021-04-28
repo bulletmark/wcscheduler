@@ -22,7 +22,7 @@ def run():
 
     app = Bottle()
 
-    @app.post('/api')
+    @app.post('/webhook')
     def api():
         'Process an incoming message'
         scheduler.webhook(request.json['webhook'], request.json['action'],
