@@ -8,6 +8,9 @@ After=time-sync.target
 User=#USER#
 # Set the following to the source program directory (where you git cloned)
 WorkingDirectory=#WORKDIR#
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5s
 ExecStart=#WORKDIR#/%p
 
 [Install]
