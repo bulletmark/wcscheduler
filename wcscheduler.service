@@ -9,6 +9,7 @@ User=#USER#
 # Set the following to the source program directory (where you git cloned)
 WorkingDirectory=#WORKDIR#
 KillSignal=SIGINT
+TimeoutStopSec=5s
 Restart=on-failure
 RestartSec=5s
 ExecStart=#WORKDIR#/%p
