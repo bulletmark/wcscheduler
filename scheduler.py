@@ -6,8 +6,10 @@
 import sys
 import platform
 import time
+import pickle
 import threading
 from datetime import datetime, date, timedelta
+from pathlib import Path
 
 # 3rd party packages
 import requests
@@ -19,8 +21,9 @@ myhost = platform.node().lower()
 sched = timesched.Scheduler()
 lock = threading.Lock()
 webdelay = 0
-webdelay = 0
 locations = {}
+cachedir = None
+cache_time_max = timedelta(days=30)
 
 def parsetime(timestr):
     'Parse time value from given string'
@@ -42,7 +45,7 @@ SUNTIME = parsetime('00:01')
 # Times we assume if web API request fails
 SUNTIMES = {'sunrise': '06:00', 'sunset': '18:00'}
 
-def fetchsun(coords, today):
+def fetchsun_api(coords, today):
     'Fetch sunrise/sunset data from web API'
     url = SUNAPI.format(coords[0], coords[1], today.isoformat())
     try:
@@ -61,6 +64,44 @@ def fetchsun(coords, today):
     if not res:
         print(f'Results error fetching {url}', file=sys.stderr)
         return None
+
+    return res
+
+def fetchsun(coords, today):
+    'Fetch sunrise/sunset data'
+    coordstr = ','.join(str(c) for c in coords)
+    cfile = Path(cachedir) / f'coords:{coordstr}'
+
+    last_day = None
+    if cache_time_max:
+        try:
+            with cfile.open('rb') as fp:
+                last_day, last_res = pickle.load(fp)
+        except Exception:
+            pass
+        else:
+            # If we already have today cached then just use it now
+            if last_day == today:
+                print('Loaded cached sunset/rise times for today',
+                        file=sys.stderr)
+                return last_res
+
+    res = fetchsun_api(coords, today)
+
+    # If we failed to get times from the internet then use last values
+    # from last cached fetch
+    if res:
+        with cfile.open('wb') as fp:
+            pickle.dump((today, res), fp)
+    elif last_day:
+        if (today - last_day) > cache_time_max:
+            cfile.unlink()
+            print(f'Discarded cached sunset/rise times for {last_day}',
+                    file=sys.stderr)
+        else:
+            print(f'Loaded cached sunset/rise times for {last_day}',
+                    file=sys.stderr)
+            res = last_res
 
     return res
 
@@ -254,9 +295,11 @@ def webhook(hook, action, created=None):
     else:
         print(f'No job for webhook "{webhook}"')
 
-def init(args, conf):
+def init(prog, args, conf):
     'Set up each job, each with potentially multiple timers/hooks'
     global webdelay
+    global cachedir
+    global cache_time_max
 
     locations.update(conf.get('locations', {}))
 
@@ -268,6 +311,11 @@ def init(args, conf):
     webdelay = conf.get('webdelay', 0)
     if webdelay:
         webdelay = timedelta(seconds=webdelay)
+
+    cachedir = Path(f'~/.cache/{prog}/times').expanduser()
+    cachedir.mkdir(parents=True, exist_ok=True)
+    if args.no_cache:
+        cache_time_max = None
 
     # Iterate over configured outputs
     now = datetime.now().time()

@@ -5,7 +5,7 @@ import scheduler
 
 _port = None
 
-def init(args, conf):
+def init(prog, args, conf):
     'Set up web app'
     global _port
 

@@ -20,6 +20,8 @@ import web
 opt = argparse.ArgumentParser(description=__doc__.strip())
 opt.add_argument('-c', '--config',
         help='alternative configuration file')
+opt.add_argument('-C', '--no-cache', action='store_true',
+        help='do not use sunset/rise API cache')
 args = opt.parse_args()
 
 # Determine config file path
@@ -30,13 +32,13 @@ cfile = Path(args.config) if args.config else \
 # Read config file
 conf = YAML(typ='safe').load(cfile)
 
-num_jobs, num_hooks, num_timers = scheduler.init(args, conf)
+num_jobs, num_hooks, num_timers = scheduler.init(opt.prog, args, conf)
 print(f'Starting with {num_jobs} jobs, {num_hooks} hooks, '
         f'{num_timers} timers')
 
 # We always run the web server in main thread because better for
 # interrupt (e.g. ctrl+c) handling
-if num_hooks > 0 and web.init(args, conf):
+if num_hooks > 0 and web.init(opt.prog, args, conf):
     if num_jobs > 0:
         t = threading.Thread(target=scheduler.run)
         t.daemon = True

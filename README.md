@@ -110,14 +110,15 @@ the Raspberry Pi running this application.
 ### Command Line Usage
 
 ```
-usage: wcscheduler [-h] [-c CONFIG]
+usage: wcscheduler [-h] [-c CONFIG] [-C]
 
 Program to schedule control of Watts Clever switches.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c CONFIG, --config CONFIG
                         alternative configuration file
+  -C, --no-cache        do not use sunset/rise API cache
 ```
 
 <!-- vim: se ai syn=markdown: -->
