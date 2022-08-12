@@ -8,6 +8,7 @@ import platform
 import time
 import pickle
 import threading
+import urllib3
 from datetime import datetime, date, timedelta
 from pathlib import Path
 
@@ -15,6 +16,9 @@ from pathlib import Path
 import requests
 import wccontrol
 import timesched
+
+# Disable warning about SSL verification arising from requests library
+urllib3.disable_warnings()
 
 ON_STATES = {'1', 'on', 'true', 'yes', 'set'}
 myhost = platform.node().lower()
@@ -49,7 +53,7 @@ def fetchsun_api(coords, today):
     'Fetch sunrise/sunset data from web API'
     url = SUNAPI.format(coords[0], coords[1], today.isoformat())
     try:
-        r = requests.get(url)
+        r = requests.get(url, verify=False)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f'Error: {str(e)}', file=sys.stderr)
