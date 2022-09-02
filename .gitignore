@@ -1,6 +1,6 @@
-venv/
-.vscode
-version
-*.pyc
+.vscode/
+.idea/
 *.egg-info/
-__pycache__
+__pycache__/
+venv/
+*.pyc

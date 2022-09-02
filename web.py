@@ -25,8 +25,9 @@ def run():
     @app.post('/webhook')
     def api():
         'Process an incoming message'
-        scheduler.webhook(request.json['webhook'], request.json['action'],
-                request.json.get('created'))
+        scheduler.webhook(request.json.get('webhook', '<no-webhook>'),
+                          request.json.get('action', '<no-action>'),
+                          request.json.get('created'))
         return 'ok'
 
     # Will block here, essentially forever
