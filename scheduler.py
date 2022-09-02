@@ -284,16 +284,18 @@ class Job:
 
 def webhook(hook, action, created=None):
     'Called on receipt of external webhook'
-    print(f'Received webhook "{hook}" for "{action}"')
     if created:
         ctime = datetime.strptime(created, '%B %d, %Y at %I:%M%p')
         ctimestr = ctime.isoformat(sep=' ', timespec='seconds')
-        print(f'.. webhook "{hook}" was created at "{ctimestr}"')
-        if webdelay:
-            now = datetime.now()
-            if (now - ctime) > webdelay:
-                print(f'.. webhook "{hook}" too delayed (> "{webdelay}")')
-                return
+        ctimestr = f' ({ctimestr})'
+    else:
+        ctimestr = ''
+
+    print(f'Received webhook "{hook}" for "{action}"{ctimestr}')
+
+    if created and webdelay and (datetime.now() - ctime) > webdelay:
+        print(f'.. webhook "{hook}" too delayed (> "{webdelay}")')
+        return
 
     job = Job.webhooks.get(hook)
     if job:
