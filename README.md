@@ -66,7 +66,7 @@ target file:
 
 ```sh
 sudo cp wcscheduler.service /etc/systemd/systemd/
-sudo vim /etc/systemd/systemd/wcscheduler.service
+sudoedit /etc/systemd/systemd/wcscheduler.service
 ```
 
 Then:
