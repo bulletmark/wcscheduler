@@ -20,7 +20,7 @@ import timesched
 # Disable warning about SSL verification arising from requests library
 urllib3.disable_warnings()
 
-ON_STATES = {'on', 'enable', 'set', 'true', 'yes'}
+ON_STATES = {'on', 'enable', 'set', 'true', 'yes', '1'}
 myhost = platform.node().lower()
 sched = timesched.Scheduler()
 lock = threading.Lock()
@@ -284,6 +284,12 @@ class Job:
 
 def webhook(hook, action, created=None):
     'Called on receipt of external webhook'
+    if not hook:
+        return 'webhook not defined'
+
+    if not action:
+        return 'action not defined'
+
     if created:
         ctime = datetime.strptime(created, '%B %d, %Y at %I:%M%p')
         ctimestr = ctime.isoformat(sep=' ', timespec='seconds')
@@ -295,14 +301,16 @@ def webhook(hook, action, created=None):
 
     if created and webdelay and (datetime.now() - ctime) > webdelay:
         print(f'.. webhook "{hook}" too delayed (> "{webdelay}")')
-        return
+        return 'Too delayed'
 
     job = Job.webhooks.get(hook)
-    if job:
-        to_off = set(action.lower().split()).isdisjoint(ON_STATES)
-        job.do(JobState(not to_off))
-    else:
+    if not job:
         print(f'.. no job for webhook "{hook}"')
+        return f'No job for {hook}'
+
+    to_off = set(action.lower().split()).isdisjoint(ON_STATES)
+    job.do(JobState(not to_off))
+    return None
 
 def init(prog, args, conf):
     'Set up each job, each with potentially multiple timers/hooks'

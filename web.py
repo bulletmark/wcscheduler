@@ -18,17 +18,24 @@ def init(prog, args, conf):
 
 def run():
     'Run web app'
-    from bottle import Bottle, request
+    from bottle import Bottle, request, HTTPResponse
 
     app = Bottle()
 
     @app.post('/webhook')
     def api():
         'Process an incoming message'
-        scheduler.webhook(request.json.get('webhook', '<no-webhook>'),
-                          request.json.get('action', '<no-action>'),
-                          request.json.get('created'))
-        return 'ok'
+        if request.json:
+            error = scheduler.webhook(request.json.get('webhook'),
+                                    request.json.get('action'),
+                                    request.json.get('created'))
+        else:
+            error = 'No json data'
+
+        if error:
+            return HTTPResponse({'Error': error}, 400)
+
+        return {'Result': 'Success'}
 
     # Will block here, essentially forever
     app.run(host='0.0.0.0', port=int(_port), server='bjoern')
