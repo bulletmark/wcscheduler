@@ -8,6 +8,7 @@ After=time-sync.target
 User=#USER#
 # Set the following to the source program directory (where you git cloned)
 WorkingDirectory=#WORKDIR#
+KillMode=mixed
 KillSignal=SIGINT
 TimeoutStopSec=5s
 Restart=on-failure
