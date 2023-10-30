@@ -14,7 +14,7 @@ from pathlib import Path
 
 # 3rd party packages
 import requests
-import wccontrol
+from wccontrol import WCcontrol
 import timesched
 
 # Disable warning about SSL verification arising from requests library
@@ -205,7 +205,7 @@ class Job:
 
         self.lastpair = (self.groups[-1], self.addresses[-1])
         self.name = conf.get('name', f'Address {address}')
-        self.gpiopin = conf.get('gpiopin')
+        self.wccontrol = WCcontrol(conf.get('gpiopin'))
 
         # Set up webhook, if configured
         webhook = conf.get('webhook')
@@ -278,7 +278,7 @@ class Job:
                 print(f'Set {self.name} {jobstate.statetext}')
                 for group in self.groups:
                     for addr in self.addresses:
-                        wccontrol.set(group, addr, jobstate.state, self.gpiopin)
+                        self.wccontrol.set(group, addr, jobstate.state)
                         if (group, addr) != self.lastpair:
                             time.sleep(0.2)
 
