@@ -2,15 +2,14 @@
 'Fetch sunrise/sunset times from web API'
 # Mark Blakeney, May 2016.
 
-# Standard packages
-import sys
 import pickle
-import urllib3
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 # 3rd party packages
 import requests
+import urllib3
 
 # Disable warning about SSL verification arising from requests library
 urllib3.disable_warnings()
@@ -43,7 +42,7 @@ def _fetchsun_api(coords, today):
     return res
 
 def _fetchsun(coords, today):
-    'Fetch sunrise/sunset data'
+    'Fetch sunrise/sunset data, potentially from cache'
     coordstr = ','.join(str(c) for c in coords)
     cfile = Path(_cachedir) / f'coords:{coordstr}'
 
@@ -81,21 +80,23 @@ def _fetchsun(coords, today):
     return res
 
 def getsun(coords, event, today):
-    'Cache all sunrise/sunset fetches for today'
+    'Fetch, cache, and return sunrise/sunset fetches for today'
     cached = False
     if getsun.day != today:
         getsun.cache.clear()
         getsun.day = today
-    elif coords in getsun.cache:
+    else:
         res = getsun.cache.get(coords)
-        cached = True
+        if res:
+            cached = True
 
     if not cached:
         res = _fetchsun(coords, today)
-        getsun.cache[coords] = res
+        if res:
+            getsun.cache[coords] = res
 
-    if not res:
-        return None
+        if not res:
+            return None
 
     res = res.get(event)
     if not res:
@@ -113,7 +114,7 @@ getsun.day = None
 getsun.cache = {}
 
 def init(prog, args):
-    'Set up each job, each with potentially multiple timers/hooks'
+    'Init this module'
     global _cachedir
     global _cache_time_max
 

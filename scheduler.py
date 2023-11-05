@@ -5,10 +5,10 @@
 # Standard packages
 import sys
 import platform
-import time
+from time import time as timet
 import threading
 import urllib3
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time, timedelta
 
 # 3rd party packages
 from wccontrol import WCcontrol
@@ -19,6 +19,7 @@ import sunapi
 urllib3.disable_warnings()
 
 ON_STATES = {'on', 'enable', 'set', 'true', 'yes', '1'}
+ON_TEXT = ['off', 'on']
 myhost = platform.node().lower()
 sched = timesched.Scheduler()
 lock = threading.Lock()
@@ -26,60 +27,55 @@ webdelay = 0
 locations = {}
 
 def parsetime(timestr):
-    'Parse time value from given string'
-    length = len(timestr)
-    if length == 5:
-        tm = datetime.strptime(timestr, '%H:%M').time()
-    elif length == 8:
-        tm = datetime.strptime(timestr, '%H:%M:%S').time()
-    else:
-        sys.exit(f'Error: Invalid configured time string "{timestr}".')
+    'Parse time value() from given string'
+    fields = timestr.split(':')
+    try:
+        timev = time(*(int(f) for f in fields))
+    except Exception as e:
+        sys.exit(f'Error: Invalid time string "{timestr}": {str(e)}.')
 
-    return tm
+    return timev
 
 # Daily time at which we fetch SUN times
 SUNTIME = parsetime('00:01')
 
 # Times we assume if web API request fails
-SUNTIMES = {'sunrise': '06:00', 'sunset': '18:00'}
+_SUNTIMES = {'sunrise': '06:00', 'sunset': '18:00'}
+SUNTIMES = {k: parsetime(v) for k, v in _SUNTIMES.items()}
 
-class JobState:
-    'Wrapper for callback state'
-    def __init__(self, state, event=None, text=None):
+class SunJob:
+    'Wrapper for job that requires sunrise/sunset times'
+    def __init__(self, state, event, text):
         self.state = state
         self.event = event
-        self.statetext = 'on' if state else 'off'
 
-        if text:
-            for c in ('+', '-'):
-                signx = text.find(c)
-                if signx >= 0:
-                    break
-
+        for c in ('+', '-'):
+            signx = text.find(c)
             if signx >= 0:
-                self.timex = datetime.combine(date.min,
-                        parsetime(text[(signx + 1):])) - datetime.min
-                self.eventdesc = f'{event} {c} {self.timex}'
-                if c == '-':
-                    self.timex = -self.timex
+                break
 
-                text = text[:signx]
-            else:
-                self.timex = timedelta()
+        if signx >= 0:
+            hm = parsetime(text[(signx + 1):])
+            self.timex = timedelta(hours=hm.hour, minutes=hm.minute,
+                                   seconds=hm.second)
+            if c == '-':
+                self.timex = -self.timex
 
-            loc = locations.get(text)
-            if not loc:
-                sys.exit(f'Error: Location "{text}" not defined.')
+            text = text[:signx]
+        else:
+            self.timex = timedelta()
 
-            self.coords = tuple(float(v.strip()) for v in loc.split(','))
+        loc = locations.get(text)
+        if not loc:
+            sys.exit(f'Error: Location "{text}" not defined.')
+
+        self.coords = tuple(float(v.strip()) for v in loc.split(','))
 
     def fetchtime(self):
         'Fetch event time'
         today = date.today()
-        tevent = sunapi.getsun(self.coords, self.event, today)
-        if not tevent:
-            tevent = datetime.combine(today,
-                    parsetime(SUNTIMES.get(self.event)))
+        tevent = sunapi.getsun(self.coords, self.event, today) or \
+            datetime.combine(today, SUNTIMES.get(self.event))
 
         return (tevent + self.timex).time()
 
@@ -141,48 +137,49 @@ class Job:
             for event in SUNTIMES:
                 if field.lower().startswith(f'{event}@'):
                     jobtime = SUNTIME
-                    jobstate = JobState(state, event, field[(len(event) + 1):])
-                    desc = jobstate.eventdesc
+                    sunjob = SunJob(state, event, field[(len(event) + 1):])
+                    desc = field
 
                     # Ensure first activation for today
                     if on_today:
-                        firsttime = jobstate.fetchtime()
+                        firsttime = sunjob.fetchtime()
                         desc += f' (1st {firsttime})'
                         if firsttime > now:
-                            sched.oneshot(firsttime, 0, self.do,
-                                    JobState(state))
+                            sched.oneshot(firsttime, 0, self.do, state)
+
+                    sched.repeat_on_days(days, jobtime, 0, self.do_sunjob,
+                                         sunjob)
                     break
             else:
                 jobtime = parsetime(field)
-                jobstate = JobState(state)
                 desc = str(jobtime)
                 if on_today:
                     firsttime = jobtime
+                sched.repeat_on_days(days, jobtime, 0, self.do, state)
 
-            sched.repeat_on_days(days, jobtime, 0, self.do, jobstate)
-            print(f'{self.name} set {jobstate.statetext} at {days} {desc}')
+            print(f'{self.name} set {ON_TEXT[state]} at {days} {desc}')
 
             # Record starting state
             if firsttime and firsttime <= now:
                 istate = state
 
         # Ensure starting state is set at startup
-        self.do(JobState(istate))
+        self.do(istate)
         self.jobs.append(self)
 
-    def do(self, jobstate):
-        'Called each each timer expiry to do output'
-        if jobstate.event:
-            sched.oneshot(jobstate.fetchtime(), 0, self.do,
-                    JobState(jobstate.state))
-        else:
-            with lock:
-                print(f'Set {self.name} {jobstate.statetext}')
-                for group in self.groups:
-                    for addr in self.addresses:
-                        self.wccontrol.set(group, addr, jobstate.state)
-                        if (group, addr) != self.lastpair:
-                            time.sleep(0.2)
+    def do_sunjob(self, sunjob):
+        'Fetch sunrise/sunset time and set timer to do output'
+        sched.oneshot(sunjob.fetchtime(), 0, self.do, sunjob.state)
+
+    def do(self, state):
+        'Called to do output'
+        with lock:
+            print(f'Set {self.name} {ON_TEXT[state]}')
+            for group in self.groups:
+                for addr in self.addresses:
+                    self.wccontrol.set(group, addr, state)
+                    if (group, addr) != self.lastpair:
+                        timet.sleep(0.2)
 
 def webhook(hook, action, created=None):
     'Called on receipt of external webhook'
@@ -211,7 +208,7 @@ def webhook(hook, action, created=None):
         return f'No job for {hook}'
 
     to_off = set(action.lower().split()).isdisjoint(ON_STATES)
-    job.do(JobState(not to_off))
+    job.do(not to_off)
     return None
 
 def init(prog, args, conf):
