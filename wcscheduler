@@ -45,8 +45,7 @@ if num_hooks > 0 and web.init(opt.prog, args, conf):
         t.start()
 
     web.run()
-else:
-    if num_jobs == 0:
-        sys.exit('Terminating because nothing to do ..')
-
+elif num_jobs > 0:
     scheduler.run()
+else:
+    sys.exit('Terminating because nothing to do ..')
