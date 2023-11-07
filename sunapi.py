@@ -92,11 +92,10 @@ def getsun(coords, event, today):
 
     if not cached:
         res = _fetchsun(coords, today)
-        if res:
-            getsun.cache[coords] = res
-
         if not res:
             return None
+
+        getsun.cache[coords] = res
 
     res = res.get(event)
     if not res:
