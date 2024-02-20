@@ -1,6 +1,6 @@
 ruamel.yaml
 timesched
 wccontrol>=2.0
-git+https://github.com/bulletmark/bottle@fix-path
+bottle @ git+https://github.com/bulletmark/bottle@fix-path
 bjoern
 requests
