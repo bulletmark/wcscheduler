@@ -2,5 +2,5 @@
 .idea/
 *.egg-info/
 __pycache__/
-venv/
+.venv/
 *.pyc

@@ -19,17 +19,17 @@ Requires Python 3.6 or later. Does not work with Python 2.
 ```bash
 git clone https://github.com/bulletmark/wcscheduler.git
 cd wcscheduler
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
 
 The above will install
-[`wccontrol`](https://github.com/bulletmark/wccontrol/) in your local `venv/`
+[`wccontrol`](https://github.com/bulletmark/wccontrol/) in your local `.venv/`
 dir but you then need to follow the instructions to [make the GPIO
 accessible](https://github.com/bulletmark/wccontrol#make-gpio-device-accessible) and then to [program the switches](https://github.com/bulletmark/wccontrol#groups-and-addresses).
 
 Be sure to set up the `gpio` group and `udev` rules etc as described and
-also program the switch groups and addresses. Run `venv/bin/wccontrol`
+also program the switch groups and addresses. Run `.venv/bin/wccontrol`
 from within your `wcscheduler` dir to program the switches.
 
 ## Configuration
