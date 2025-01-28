@@ -17,6 +17,7 @@ NAME = $(shell basename $(CURDIR))
 all:
 
 check:
+	ruff check $(NAME) *.py
 	vermin -i --no-tips $(NAME) *.py
 	shellcheck *.sh
 
