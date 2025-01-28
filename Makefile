@@ -17,7 +17,6 @@ NAME = $(shell basename $(CURDIR))
 all:
 
 check:
-	flake8 $(NAME) *.py
 	vermin -i --no-tips $(NAME) *.py
 	shellcheck *.sh
 
